@@ -1,2 +1,3 @@
 # Dashcam Speed Detection Neural Net
- work in progress
+
+my response to the comma.ai programming challenge
