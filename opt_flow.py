@@ -30,10 +30,10 @@ while counter < 10798:
     print("frame: ", counter)
     counter += 1
 data = np.asarray(total_flow)
-flow_path = "data/flows/test_flow.npz"
+# flow_path = "data/flows/test_flow.npz"
 # flow_path = "data/flows/train_flow" + str(file_counter) + ".npz"
-f = open(flow_path, "a")
-f.close()
+# f = open(flow_path, "a")
+# f.close()
 np.savez_compressed(flow_path, data)
 # print("finished round ", str(file_counter))
 # file_counter += 1
