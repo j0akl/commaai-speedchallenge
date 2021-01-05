@@ -8,11 +8,28 @@ import torch.nn.functional as F
 import torch.optim as optim
 from math import floor, ceil
 
-def create_dataloaders(filepath, batch_size=32):
-    
-    labels = open(parent_dir + "train.txt", "r").readlines()
+"""
+HOW TO IMPROVE:
+    - Make more intentional choices about the structure of the network
+     - maybe use a multi-layer fully connected perceptron instead of two random
+     linear layers
+    - use FEWER convolutional layers, the current one is too complex
+    - add noise to the image (?) may help with overfit, seems to be the problem
+    in the previous iteration
+    - look into methods of image normalization to make the test set resemble
+    the train set
+    - meter the learning rate based on the epoch
+    - make sure the loss is working correctly (hard to tell whats actually
+    happening rn)
+"""
 
-    raw_data = array # np.load(filepath)['arr_0']
+def create_dataloaders(filepath, batch_size=32):
+
+    labels = open("data/train.txt", "r").readlines()
+    # use following in notebook
+    # labels = open(parent_dir + "train.txt", "r").readlines()
+
+    raw_data = np.load(filepath)['arr_0']
 
     len_data = len(raw_data)
     train_length = floor(len_data * .8)
@@ -61,7 +78,7 @@ def test(model, test_loader, device='cpu'):
             output = model(data)
             test_loss += F.mse_loss(output, target).item()
 
-    test_loss /= len(test_loader.dataset)
+    # test_loss /= len(test_loader.dataset)
 
     print('\nTest set: Average loss: {:.4f}\n'.format(test_loss))
 
@@ -75,32 +92,31 @@ def predict(x):
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        
+
         # first part
         self.conv1 = nn.Conv2d(2, 64, 2)
         self.conv2 = nn.Conv2d(64, 64, 2)
         self.conv3 = nn.Conv2d(64, 64, 2)
         self.conv4 = nn.Conv2d(64, 32, 2)
-        
+
         # second
         self.conv5 = nn.Conv2d(32, 32, 2)
         self.conv6 = nn.Conv2d(32, 32, 2)
         self.conv7 = nn.Conv2d(32, 32, 2)
         self.conv8 = nn.Conv2d(32, 16, 2)
-        
+
         # third
         self.conv9  = nn.Conv2d(16, 16, 2)
         self.conv10 = nn.Conv2d(16, 16, 2)
         self.conv11 = nn.Conv2d(16, 16, 2)
         self.conv12 = nn.Conv2d(16, 16, 2)
-        
+
         self.dropout1 = nn.Dropout(0.25)
         self.dropout2 = nn.Dropout(0.5)
         self.fc1 = nn.Linear(2816, 128)
         self.fc2 = nn.Linear(128, 1)
         self.flat = nn.Flatten()
 
-        
     def forward(self, x):
         x = self.conv1(x)
         x = F.relu(x)
@@ -111,7 +127,6 @@ class Net(nn.Module):
         x = self.conv4(x)
         x = F.relu(x)
         x = F.max_pool2d(x, 2)
-
 
         x = self.conv5(x)
         x = F.relu(x)
@@ -131,7 +146,7 @@ class Net(nn.Module):
         x = F.relu(x)
         x = self.conv12(x)
         x = F.max_pool2d(x, 2)
-        
+
         x = torch.flatten(x, 1)
         # x = self.dropout1(x)
         x = self.fc1(x)
@@ -142,9 +157,13 @@ class Net(nn.Module):
         return x
 
 if __name__ == "__main__":
-    device = "cuda"
+    device = "cpu"
 
-    train_dl, val_dl = create_dataloaders(parent_dir + "flows/train_flow.npz", batch_size=512)
+    flow_path = "data/flows/train_flow.npz"
+    train_dl, val_dl = create_dataloaders(flow_path, batch_size=128)
+
+    # use the following in notebook
+    # train_dl, val_dl = create_dataloaders(parent_dir + "flows/train_flow.npz", batch_size=512)
 
     model = Net().float().to(device)
 
@@ -156,6 +175,6 @@ if __name__ == "__main__":
         train(model, train_dl, optimizer, epoch, device)
         test(model, val_dl, device)
 
-    f = open(parent_dir + 'models/nd_v4.pt', 'w')
-    torch.save(model.state_dict(), parent_dir + 'models/nd_v4.pt')
-    f.close()
+    # f = open(parent_dir + 'models/nd_v4.pt', 'w')
+    # torch.save(model.state_dict(), parent_dir + 'models/nd_v4.pt')
+    # f.close()
